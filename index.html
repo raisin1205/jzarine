@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>first date yarn?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="falling-hearts" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span>
+    </div>
+    <main class="page">
+      <section class="card">
+        <div class="headline">
+          <p class="eyebrow">Happy</p>
+          <h1 class="title">Heart's Day Masha</h1>
+        </div>
+
+        <div class="polaroid-row">
+          <figure class="polaroid" aria-label="Our photo">
+            <div class="polaroid-frame">
+              <img id="polaroidImage" src="miss1.jpg" alt="Our photo" />
+            </div>
+            <figcaption class="caption">My Safe Space</figcaption>
+          </figure>
+        </div>
+
+        <div class="song-progress" aria-label="Song progress">
+          <div class="song-times">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
+          </div>
+          <div class="song-line">
+            <div class="song-line-fill" id="songFill"></div>
+          </div>
+        </div>
+
+        <p class="song-note">This song reminds me of you</p>
+
+        <button class="audio-btn" id="audioToggle" type="button">
+          Tap to play
+        </button>
+        <audio id="song" src="ikawangpatutunguhan.MP3" preload="none"></audio>
+
+        <button class="memories-btn" id="openMemories" type="button">
+          Memories
+        </button>
+      </section>
+    </main>
+
+    <div class="modal" id="memoriesModal" aria-hidden="true">
+      <div class="modal-backdrop" id="closeMemories"></div>
+      <div class="modal-card" role="dialog" aria-label="Digi cam clips">
+        <button class="modal-close" id="closeMemoriesBtn" aria-label="Close">×</button>
+        <h2 class="modal-title">Cute Clips</h2>
+        <div class="video-player">
+          <video id="clipPlayer" controls preload="metadata">
+            <source src="1.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <div class="clip-list">
+          <button class="clip-btn is-active" data-src="1.mp4">1</button>
+          <button class="clip-btn" data-src="2.mp4">2</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      const photos = [
+        "miss1.jpg",
+        "miss2.jpg",
+        "miss3.jpg",
+        "miss4.jpg",
+        "miss5.jpg",
+        "miss6.jpg",
+        "miss7.jpg",
+        "miss8.jpg",
+        "miss9.jpg",
+        "miss10.jpg",
+      ];
+      let photoIndex = 0;
+      const polaroidImage = document.getElementById("polaroidImage");
+
+      const setPhotoIndex = (index) => {
+        photoIndex = (index + photos.length) % photos.length;
+        polaroidImage.src = photos[photoIndex];
+      };
+
+
+      const audio = document.getElementById("song");
+      const button = document.getElementById("audioToggle");
+      const currentTimeEl = document.getElementById("currentTime");
+      const durationEl = document.getElementById("duration");
+      const songFill = document.getElementById("songFill");
+      const slideIntervalMs = 3000;
+      let slideTimer = null;
+
+      const memoriesModal = document.getElementById("memoriesModal");
+      const openMemories = document.getElementById("openMemories");
+      const closeMemories = document.getElementById("closeMemories");
+      const closeMemoriesBtn = document.getElementById("closeMemoriesBtn");
+      const clipPlayer = document.getElementById("clipPlayer");
+      const clipButtons = document.querySelectorAll(".clip-btn");
+
+      const formatTime = (seconds) => {
+        if (!Number.isFinite(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+      };
+
+      audio.addEventListener("loadedmetadata", () => {
+        durationEl.textContent = formatTime(audio.duration);
+      });
+
+      audio.addEventListener("timeupdate", () => {
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+        if (audio.duration) {
+          const progress = (audio.currentTime / audio.duration) * 100;
+          songFill.style.width = `${progress}%`;
+        }
+      });
+
+      const startSlideshow = () => {
+        if (slideTimer) return;
+        slideTimer = setInterval(() => {
+          if (!audio.paused) {
+            setPhotoIndex(photoIndex + 1);
+          }
+        }, slideIntervalMs);
+      };
+
+      const stopSlideshow = () => {
+        if (slideTimer) {
+          clearInterval(slideTimer);
+          slideTimer = null;
+        }
+      };
+
+      button.addEventListener("click", () => {
+        if (audio.paused) {
+          audio.play();
+          button.textContent = "Tap to pause";
+          button.classList.add("is-playing");
+          startSlideshow();
+        } else {
+          audio.pause();
+          button.textContent = "Tap to play";
+          button.classList.remove("is-playing");
+          stopSlideshow();
+        }
+      });
+
+      audio.addEventListener("ended", () => {
+        button.textContent = "Tap to play";
+        button.classList.remove("is-playing");
+        songFill.style.width = "0%";
+        currentTimeEl.textContent = "0:00";
+        stopSlideshow();
+      });
+
+      const openModal = () => {
+        memoriesModal.classList.add("is-open");
+        memoriesModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+      };
+
+      const closeModal = () => {
+        memoriesModal.classList.remove("is-open");
+        memoriesModal.setAttribute("aria-hidden", "true");
+        clipPlayer.pause();
+        document.body.classList.remove("modal-open");
+      };
+
+      openMemories.addEventListener("click", openModal);
+      closeMemories.addEventListener("click", closeModal);
+      closeMemoriesBtn.addEventListener("click", closeModal);
+
+      clipButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          clipButtons.forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+          const src = btn.dataset.src;
+          clipPlayer.src = src;
+          clipPlayer.play();
+        });
+      });
+    </script>
+  </body>
+</html>
